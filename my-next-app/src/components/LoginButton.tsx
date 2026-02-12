@@ -11,7 +11,9 @@ export default function LoginButton() {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: redirectUrl,
+        queryParams: {
+          redirect_to: redirectUrl,
+        },
       },
     })
   }
