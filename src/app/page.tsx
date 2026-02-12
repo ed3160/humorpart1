@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import type { ImageRow } from "@/types/database";
+import { LoginButton } from "@/components/LoginButton";
 
 // Chosen so ~2 lines fill the caption area with "..." at the end of the second line
 const MAX_CAPTION_CHARS = 52;
@@ -54,6 +55,20 @@ function Card({ row }: { row: ImageRow }) {
 
 export default async function Home() {
   const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+
+  if (!session) {
+    return (
+      <main className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-8">
+        <h1 className="text-3xl font-bold tracking-tight mb-2">Humor Project</h1>
+        <p className="text-neutral-600 dark:text-neutral-400 mb-8">
+          Sign in to view images
+        </p>
+        <LoginButton />
+      </main>
+    );
+  }
+
   const { data: images, error } = await supabase
     .from("images")
     .select("id, created_datetime_utc, modified_datetime_utc, url, is_common_use, profile_id, additional_context, is_public, image_description, celebrity_recognition")
