@@ -39,7 +39,7 @@ export default function Home() {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: 'https://secure.almostcrackd.ai/auth/v1/callback',
+        redirectTo: `${window.location.origin}/`,
       },
     });
   };
