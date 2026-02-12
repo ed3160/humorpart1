@@ -6,10 +6,12 @@ export default function LoginButton() {
   const login = async () => {
     const supabase = createClient()
 
+    const redirectUrl = `${window.location.origin}/auth/callback`
+
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${location.origin}/auth/callback`,
+        redirectTo: redirectUrl,
       },
     })
   }
