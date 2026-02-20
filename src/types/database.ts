@@ -13,3 +13,13 @@ export type ImageRow = {
   image_description: string | null;
   celebrity_recognition: string | null;
 };
+
+/**
+ * Row from the caption_votes table. One row per user per caption (unique on profile_id, caption_id).
+ * Upvote = 1, downvote = -1.
+ */
+export type CaptionVoteRow = {
+  profile_id: string;
+  caption_id: string;
+  vote: number; // 1 or -1
+};
