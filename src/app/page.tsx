@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import type { ImageRow } from "@/types/database";
+import { CAPTION_VOTES_VOTE_COLUMN } from "@/lib/caption-votes";
 import { LoginButton } from "@/components/LoginButton";
 import { ImageCard } from "@/components/ImageCard";
 import { ViewSwitcher } from "@/components/ViewSwitcher";
@@ -43,23 +44,37 @@ export default async function Home() {
   const rows = (images ?? []) as ImageRow[];
   const imageIds = rows.map((r) => r.id);
 
-  const { data: votes } =
+  const voteCol = CAPTION_VOTES_VOTE_COLUMN;
+  const { data: votes, error: votesError } =
     imageIds.length > 0
       ? await supabase
           .from("caption_votes")
-          .select("caption_id, vote")
+          .select("caption_id, " + voteCol)
           .eq("profile_id", user.id)
           .in("caption_id", imageIds)
-      : { data: [] };
+      : { data: [] as { caption_id: string; [k: string]: unknown }[] | null, error: null };
 
-  const votesArray = (votes ?? []).map((v: { caption_id: string; vote: number }) => ({
-    caption_id: v.caption_id,
-    vote: v.vote === 1 ? 1 : -1,
-  }));
+  const votesRaw = (votes ?? []) as { caption_id: string; [k: string]: unknown }[];
+  const votesArray = votesRaw
+    .map((v) => {
+      const raw = v[voteCol];
+      const num = typeof raw === "number" ? raw : Number(raw);
+      return { caption_id: v.caption_id, vote: num === 1 ? 1 : num === -1 ? -1 : 0 };
+    })
+    .filter((v): v is { caption_id: string; vote: 1 | -1 } => v.vote !== 0);
 
   return (
     <main className="min-h-screen bg-background text-foreground p-6 md:p-8">
-      <ViewSwitcher rows={rows} votesArray={votesArray}>
+      {votesError && (
+        <div className="mb-4 p-3 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 text-sm">
+          Could not load your votes: {votesError.message}. Set <code className="bg-black/10 dark:bg-white/10 px-1 rounded">NEXT_PUBLIC_CAPTION_VOTES_VOTE_COLUMN</code> in .env.local to your table’s vote column name (see Table Editor → caption_votes).
+        </div>
+      )}
+      <ViewSwitcher
+        rows={rows}
+        votesArray={votesArray}
+        userId={user.id}
+      >
         {rows.length === 0 ? (
           <p className="text-lg text-neutral-600 dark:text-neutral-400">
             No images yet.

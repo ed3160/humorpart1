@@ -16,10 +16,10 @@ export type ImageRow = {
 
 /**
  * Row from the caption_votes table. One row per user per caption (unique on profile_id, caption_id).
- * Upvote = 1, downvote = -1.
+ * Upvote = 1, downvote = -1. Column in DB is "value" (not "vote").
  */
 export type CaptionVoteRow = {
   profile_id: string;
   caption_id: string;
-  vote: number; // 1 or -1
+  value: number; // 1 or -1
 };

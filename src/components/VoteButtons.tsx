@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { CAPTION_VOTES_VOTE_COLUMN } from "@/lib/caption-votes";
 
 type Vote = 1 | -1 | null;
 
@@ -50,7 +51,7 @@ export function VoteButtons({
         {
           profile_id: user.id,
           caption_id: captionId,
-          vote: newVote,
+          [CAPTION_VOTES_VOTE_COLUMN]: newVote,
         },
         {
           onConflict: "profile_id,caption_id",
