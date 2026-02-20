@@ -14,7 +14,7 @@ export function ImageCard({
   priority = false,
 }: {
   row: ImageRow;
-  /** Id from captions table (caption_votes.caption_id FK). Null = no caption row, hide vote buttons. */
+  /** Id from captions table (caption_votes.caption_id FK). Null only if caption row missing and create failed. */
   captionId: string | null;
   currentVote: 1 | -1 | null;
   voteColumn: string;

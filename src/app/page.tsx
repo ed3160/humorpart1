@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServerAdminClient } from "@/lib/supabase/server";
 import type { ImageRow } from "@/types/database";
 import {
   CAPTION_VOTES_VOTE_COLUMN_ENV,
@@ -72,14 +72,39 @@ export default async function Home() {
   const rows = (images ?? []) as ImageRow[];
   const imageIds = rows.map((r) => r.id);
 
-  // caption_votes.caption_id references captions.id, not images.id - resolve caption id per image
-  const { data: captionsRows } = await supabase
+  // caption_votes.caption_id references captions.id - get or create caption id per image.
+  // Use admin client so we see ALL captions (RLS often only returns rows the user "owns" or voted on).
+  const adminClient = createServerAdminClient();
+  const captionsClient = adminClient ?? supabase;
+  const { data: captionsRows } = await captionsClient
     .from("captions")
     .select("id, image_id")
     .in("image_id", imageIds);
   const imageIdToCaptionId = new Map<string, string>(
     (captionsRows ?? []).map((c: { id: string; image_id: string }) => [c.image_id, c.id])
   );
+  // Create missing caption rows so every image can be voted on (admin bypasses RLS on insert too).
+  const insertClient = adminClient ?? supabase;
+  const now = new Date().toISOString();
+  let captionInsertError: string | null = null;
+  for (const imageId of imageIds) {
+    if (imageIdToCaptionId.has(imageId)) continue;
+    const { data: newCaption, error: insertErr } = await insertClient
+      .from("captions")
+      .insert({
+        image_id: imageId,
+        profile_id: user.id,
+        created_datetime_utc: now,
+        modified_datetime_utc: now,
+        is_public: true,
+      })
+      .select("id")
+      .single();
+    if (insertErr && !captionInsertError) {
+      captionInsertError = insertErr.message;
+    }
+    if (newCaption?.id) imageIdToCaptionId.set(imageId, newCaption.id);
+  }
   const captionIds = imageIds.map((id) => imageIdToCaptionId.get(id)).filter(Boolean) as string[];
 
   const { column: voteCol, error: voteColError } = await resolveVoteColumn(
@@ -106,7 +131,12 @@ export default async function Home() {
     })
     .filter((v): v is { caption_id: string; vote: 1 | -1 } => v.vote !== 0);
 
-  const errorMessage = voteColError ?? votesError?.message;
+  const errorMessage =
+    voteColError ??
+    votesError?.message ??
+    (captionInsertError
+      ? `Could not create caption rows for some images: ${captionInsertError}. To enable voting on all images, set SUPABASE_SERVICE_ROLE_KEY in .env.local, or add an RLS policy on captions allowing INSERT for authenticated users.`
+      : null);
 
   return (
     <main className="min-h-screen bg-background text-foreground p-6 md:p-8">

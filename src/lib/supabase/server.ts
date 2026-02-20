@@ -1,4 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
 export async function createClient() {
@@ -23,5 +24,20 @@ export async function createClient() {
         },
       },
     }
+  );
+}
+
+/**
+ * Server-only client using the service role key. Bypasses RLS.
+ * Use only for trusted server operations (e.g. ensuring caption rows exist).
+ * Requires SUPABASE_SERVICE_ROLE_KEY in env. Returns null if not set.
+ */
+export function createServerAdminClient() {
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!key) return null;
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    key,
+    { auth: { persistSession: false } }
   );
 }
