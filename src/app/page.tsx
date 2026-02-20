@@ -1,10 +1,38 @@
 import { createClient } from "@/lib/supabase/server";
 import type { ImageRow } from "@/types/database";
-import { CAPTION_VOTES_VOTE_COLUMN } from "@/lib/caption-votes";
+import {
+  CAPTION_VOTES_VOTE_COLUMN_ENV,
+  CAPTION_VOTES_VOTE_COLUMN_CANDIDATES,
+} from "@/lib/caption-votes";
 import { LoginButton } from "@/components/LoginButton";
 import { ImageCard } from "@/components/ImageCard";
 import { ViewSwitcher } from "@/components/ViewSwitcher";
 import { ThemeToggleWrapper } from "@/components/ThemeToggleWrapper";
+
+async function resolveVoteColumn(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  imageIds: string[]
+): Promise<{ column: string; error?: string }> {
+  if (imageIds.length === 0) return { column: CAPTION_VOTES_VOTE_COLUMN_CANDIDATES[0] };
+  const candidates = CAPTION_VOTES_VOTE_COLUMN_ENV
+    ? [CAPTION_VOTES_VOTE_COLUMN_ENV]
+    : [...CAPTION_VOTES_VOTE_COLUMN_CANDIDATES];
+  for (const col of candidates) {
+    const { error } = await supabase
+      .from("caption_votes")
+      .select(`caption_id, ${col}`)
+      .eq("profile_id", userId)
+      .in("caption_id", imageIds)
+      .limit(1);
+    if (!error) return { column: col };
+    if (!error.message?.includes("does not exist")) return { column: col, error: error.message };
+  }
+  return {
+    column: candidates[0],
+    error: "caption_votes vote column not found. Tried: " + candidates.join(", ") + ". Set NEXT_PUBLIC_CAPTION_VOTES_VOTE_COLUMN in .env.local to your column name.",
+  };
+}
 
 export default async function Home() {
   const supabase = await createClient();
@@ -44,7 +72,12 @@ export default async function Home() {
   const rows = (images ?? []) as ImageRow[];
   const imageIds = rows.map((r) => r.id);
 
-  const voteCol = CAPTION_VOTES_VOTE_COLUMN;
+  const { column: voteCol, error: voteColError } = await resolveVoteColumn(
+    supabase,
+    user.id,
+    imageIds
+  );
+
   const { data: votes, error: votesError } =
     imageIds.length > 0
       ? await supabase
@@ -63,17 +96,19 @@ export default async function Home() {
     })
     .filter((v): v is { caption_id: string; vote: 1 | -1 } => v.vote !== 0);
 
+  const errorMessage = voteColError ?? votesError?.message;
+
   return (
     <main className="min-h-screen bg-background text-foreground p-6 md:p-8">
-      {votesError && (
+      {errorMessage && (
         <div className="mb-4 p-3 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 text-sm">
-          Could not load your votes: {votesError.message}. Set <code className="bg-black/10 dark:bg-white/10 px-1 rounded">NEXT_PUBLIC_CAPTION_VOTES_VOTE_COLUMN</code> in .env.local to your table’s vote column name (see Table Editor → caption_votes).
+          {errorMessage} Add <code className="bg-black/10 dark:bg-white/10 px-1 rounded">NEXT_PUBLIC_CAPTION_VOTES_VOTE_COLUMN=your_column_name</code> to .env.local if your table uses a different column name.
         </div>
       )}
       <ViewSwitcher
         rows={rows}
         votesArray={votesArray}
-        userId={user.id}
+        voteColumn={voteCol}
       >
         {rows.length === 0 ? (
           <p className="text-lg text-neutral-600 dark:text-neutral-400">
@@ -91,6 +126,7 @@ export default async function Home() {
                       return v === 1 ? 1 : v === -1 ? -1 : null;
                     })()
                   }
+                  voteColumn={voteCol}
                 />
               </li>
             ))}

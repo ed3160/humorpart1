@@ -8,11 +8,13 @@ import { VoteButtons } from "@/components/VoteButtons";
 export function ImageCard({
   row,
   currentVote,
+  voteColumn,
   sizes = "(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw",
   priority = false,
 }: {
   row: ImageRow;
   currentVote: 1 | -1 | null;
+  voteColumn: string;
   sizes?: string;
   priority?: boolean;
 }) {
@@ -46,7 +48,7 @@ export function ImageCard({
           </p>
         </div>
       )}
-      <VoteButtons captionId={row.id} initialVote={currentVote} />
+      <VoteButtons captionId={row.id} initialVote={currentVote} voteColumn={voteColumn} />
     </article>
   );
 }

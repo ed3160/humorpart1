@@ -7,9 +7,11 @@ import { ImageCard } from "@/components/ImageCard";
 export function StudyView({
   rows,
   voteByCaptionId,
+  voteColumn,
 }: {
   rows: ImageRow[];
   voteByCaptionId: Map<string, 1 | -1>;
+  voteColumn: string;
 }) {
   const [index, setIndex] = useState(0);
   const current = rows[index];
@@ -42,6 +44,7 @@ export function StudyView({
           <ImageCard
             row={current}
             currentVote={currentVote}
+            voteColumn={voteColumn}
             sizes="(max-width: 768px) 100vw, 28rem"
             priority
           />

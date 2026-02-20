@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { CAPTION_VOTES_VOTE_COLUMN } from "@/lib/caption-votes";
 
 type Vote = 1 | -1 | null;
 
@@ -12,14 +11,17 @@ const SAVED_FEEDBACK_MS = 2000;
 export function VoteButtons({
   captionId,
   initialVote,
+  voteColumn,
 }: {
   captionId: string;
   initialVote: Vote;
+  voteColumn: string;
 }) {
   const [vote, setVote] = useState<Vote>(initialVote);
   const [loading, setLoading] = useState(false);
   const [showUndo, setShowUndo] = useState(false);
   const [showSaved, setShowSaved] = useState(false);
+  const [voteError, setVoteError] = useState<string | null>(null);
   const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const supabase = createClient();
@@ -39,33 +41,37 @@ export function VoteButtons({
   async function submitVote(newVote: 1 | -1) {
     setLoading(true);
     setShowUndo(false);
+    setVoteError(null);
     if (undoTimerRef.current) {
       clearTimeout(undoTimerRef.current);
       undoTimerRef.current = null;
     }
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { error } = await supabase.from("caption_votes").upsert(
-        {
-          profile_id: user.id,
-          caption_id: captionId,
-          [CAPTION_VOTES_VOTE_COLUMN]: newVote,
-        },
-        {
-          onConflict: "profile_id,caption_id",
-        }
-      );
-
-      if (!error) {
-        setVote(newVote);
-        setShowUndo(true);
-        setShowSaved(true);
-        if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
-        savedTimerRef.current = setTimeout(() => setShowSaved(false), SAVED_FEEDBACK_MS);
-        undoTimerRef.current = setTimeout(() => setShowUndo(false), UNDO_DURATION_MS);
+      if (!user) {
+        setVoteError("Not signed in");
+        return;
       }
+
+      const payload = {
+        profile_id: user.id,
+        caption_id: captionId,
+        [voteColumn]: newVote,
+      };
+      const { error } = await supabase.from("caption_votes").upsert(payload, {
+        onConflict: "profile_id,caption_id",
+      });
+
+      if (error) {
+        setVoteError(error.message);
+        return;
+      }
+      setVote(newVote);
+      setShowUndo(true);
+      setShowSaved(true);
+      if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+      savedTimerRef.current = setTimeout(() => setShowSaved(false), SAVED_FEEDBACK_MS);
+      undoTimerRef.current = setTimeout(() => setShowUndo(false), UNDO_DURATION_MS);
     } finally {
       setLoading(false);
     }
@@ -135,6 +141,11 @@ export function VoteButtons({
         >
           Undo
         </button>
+      )}
+      {voteError && (
+        <p className="w-full text-xs text-red-600 dark:text-red-400 mt-1" role="alert">
+          Vote failed: {voteError}
+        </p>
       )}
     </div>
   );

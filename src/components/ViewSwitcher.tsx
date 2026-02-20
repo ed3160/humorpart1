@@ -10,12 +10,12 @@ type ViewMode = "grid" | "study";
 export function ViewSwitcher({
   rows,
   votesArray,
-  userId,
+  voteColumn,
   children,
 }: {
   rows: ImageRow[];
   votesArray: { caption_id: string; vote: number }[];
-  userId: string;
+  voteColumn: string;
   children: React.ReactNode;
 }) {
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
@@ -32,21 +32,7 @@ export function ViewSwitcher({
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Images</h1>
           <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-            Vote with ↑/↓; you’ll see “Saved” when it’s stored. Refresh the page to confirm your vote stayed (arrow stays highlighted).
-          </p>
-          <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500 font-mono flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span>Your votes loaded: <strong>{votesArray.length}</strong></span>
-            <span>·</span>
-            <span>
-              User ID: <code className="select-all bg-black/5 dark:bg-white/10 px-1 rounded">{userId.slice(0, 8)}…</code>
-              <button
-                type="button"
-                onClick={() => navigator.clipboard.writeText(userId)}
-                className="ml-1 text-neutral-500 hover:text-foreground underline"
-              >
-                Copy full ID
-              </button>
-            </span>
+            Rate each caption with ↑ (upvote) or ↓ (downvote). Your vote is saved to the database; refresh to see it persist.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -80,7 +66,7 @@ export function ViewSwitcher({
         </div>
       </header>
 
-      {viewMode === "grid" ? children : <StudyView rows={rows} voteByCaptionId={voteByCaptionId} />}
+      {viewMode === "grid" ? children : <StudyView rows={rows} voteByCaptionId={voteByCaptionId} voteColumn={voteColumn} />}
     </>
   );
 }
