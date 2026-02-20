@@ -8,10 +8,12 @@ export function StudyView({
   rows,
   voteByCaptionId,
   voteColumn,
+  imageIdToCaptionId,
 }: {
   rows: ImageRow[];
   voteByCaptionId: Map<string, 1 | -1>;
   voteColumn: string;
+  imageIdToCaptionId: Record<string, string>;
 }) {
   const [index, setIndex] = useState(0);
   const current = rows[index];
@@ -35,7 +37,8 @@ export function StudyView({
   }, [goNext, goPrev]);
 
   if (rows.length === 0) return null;
-  const currentVote = current ? (voteByCaptionId.get(current.id) ?? null) : null;
+  const captionId = imageIdToCaptionId[current.id] ?? current.id;
+  const currentVote = current ? (voteByCaptionId.get(captionId) ?? null) : null;
 
   return (
     <div className="flex flex-col items-center gap-6">
@@ -43,6 +46,7 @@ export function StudyView({
         <div key={current.id} className="transition-opacity duration-300">
           <ImageCard
             row={current}
+            captionId={captionId}
             currentVote={currentVote}
             voteColumn={voteColumn}
             sizes="(max-width: 768px) 100vw, 28rem"

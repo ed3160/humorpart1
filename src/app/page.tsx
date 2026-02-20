@@ -72,19 +72,29 @@ export default async function Home() {
   const rows = (images ?? []) as ImageRow[];
   const imageIds = rows.map((r) => r.id);
 
+  // caption_votes.caption_id references captions.id, not images.id - resolve caption id per image
+  const { data: captionsRows } = await supabase
+    .from("captions")
+    .select("id, image_id")
+    .in("image_id", imageIds);
+  const imageIdToCaptionId = new Map<string, string>(
+    (captionsRows ?? []).map((c: { id: string; image_id: string }) => [c.image_id, c.id])
+  );
+  const captionIds = imageIds.map((id) => imageIdToCaptionId.get(id)).filter(Boolean) as string[];
+
   const { column: voteCol, error: voteColError } = await resolveVoteColumn(
     supabase,
     user.id,
-    imageIds
+    captionIds.length > 0 ? captionIds : imageIds
   );
 
   const { data: votes, error: votesError } =
-    imageIds.length > 0
+    captionIds.length > 0
       ? await supabase
           .from("caption_votes")
           .select("caption_id, " + voteCol)
           .eq("profile_id", user.id)
-          .in("caption_id", imageIds)
+          .in("caption_id", captionIds)
       : { data: [] as { caption_id: string; [k: string]: unknown }[] | null, error: null };
 
   const votesRaw = (votes ?? []) as { caption_id: string; [k: string]: unknown }[];
@@ -109,6 +119,7 @@ export default async function Home() {
         rows={rows}
         votesArray={votesArray}
         voteColumn={voteCol}
+        imageIdToCaptionId={Object.fromEntries(imageIdToCaptionId)}
       >
         {rows.length === 0 ? (
           <p className="text-lg text-neutral-600 dark:text-neutral-400">
@@ -116,20 +127,20 @@ export default async function Home() {
           </p>
         ) : (
           <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6 list-none p-0 m-0">
-            {rows.map((row) => (
-              <li key={row.id}>
-                <ImageCard
-                  row={row}
-                  currentVote={
-                    (() => {
-                      const v = votesArray.find((x) => x.caption_id === row.id)?.vote;
-                      return v === 1 ? 1 : v === -1 ? -1 : null;
-                    })()
-                  }
-                  voteColumn={voteCol}
-                />
-              </li>
-            ))}
+            {rows.map((row) => {
+              const captionId = imageIdToCaptionId.get(row.id) ?? row.id;
+              const currentVote = votesArray.find((x) => x.caption_id === captionId)?.vote ?? null;
+              return (
+                <li key={row.id}>
+                  <ImageCard
+                    row={row}
+                    captionId={captionId}
+                    currentVote={currentVote === 1 ? 1 : currentVote === -1 ? -1 : null}
+                    voteColumn={voteCol}
+                  />
+                </li>
+              );
+            })}
           </ul>
         )}
       </ViewSwitcher>

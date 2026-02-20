@@ -11,11 +11,13 @@ export function ViewSwitcher({
   rows,
   votesArray,
   voteColumn,
+  imageIdToCaptionId,
   children,
 }: {
   rows: ImageRow[];
   votesArray: { caption_id: string; vote: number }[];
   voteColumn: string;
+  imageIdToCaptionId: Record<string, string>;
   children: React.ReactNode;
 }) {
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
@@ -66,7 +68,7 @@ export function ViewSwitcher({
         </div>
       </header>
 
-      {viewMode === "grid" ? children : <StudyView rows={rows} voteByCaptionId={voteByCaptionId} voteColumn={voteColumn} />}
+      {viewMode === "grid" ? children : <StudyView rows={rows} voteByCaptionId={voteByCaptionId} voteColumn={voteColumn} imageIdToCaptionId={imageIdToCaptionId} />}
     </>
   );
 }
