@@ -53,10 +53,13 @@ export function VoteButtons({
         return;
       }
 
+      const now = new Date().toISOString();
       const payload = {
         profile_id: user.id,
         caption_id: captionId,
         [voteColumn]: newVote,
+        created_datetime_utc: now,
+        modified_datetime_utc: now,
       };
       const { error } = await supabase.from("caption_votes").upsert(payload, {
         onConflict: "profile_id,caption_id",
