@@ -37,8 +37,8 @@ export function StudyView({
   }, [goNext, goPrev]);
 
   if (rows.length === 0) return null;
-  const captionId = imageIdToCaptionId[current.id] ?? current.id;
-  const currentVote = current ? (voteByCaptionId.get(captionId) ?? null) : null;
+  const captionId = imageIdToCaptionId[current.id] ?? null;
+  const currentVote = captionId ? (voteByCaptionId.get(captionId) ?? null) : null;
 
   return (
     <div className="flex flex-col items-center gap-6">

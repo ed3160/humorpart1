@@ -128,8 +128,8 @@ export default async function Home() {
         ) : (
           <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6 list-none p-0 m-0">
             {rows.map((row) => {
-              const captionId = imageIdToCaptionId.get(row.id) ?? row.id;
-              const currentVote = votesArray.find((x) => x.caption_id === captionId)?.vote ?? null;
+              const captionId = imageIdToCaptionId.get(row.id) ?? null;
+              const currentVote = captionId ? (votesArray.find((x) => x.caption_id === captionId)?.vote ?? null) : null;
               return (
                 <li key={row.id}>
                   <ImageCard

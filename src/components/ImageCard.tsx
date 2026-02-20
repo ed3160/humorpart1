@@ -14,8 +14,8 @@ export function ImageCard({
   priority = false,
 }: {
   row: ImageRow;
-  /** Id from captions table (caption_votes.caption_id FK); use row.id if no captions table. */
-  captionId: string;
+  /** Id from captions table (caption_votes.caption_id FK). Null = no caption row, hide vote buttons. */
+  captionId: string | null;
   currentVote: 1 | -1 | null;
   voteColumn: string;
   sizes?: string;
@@ -51,7 +51,9 @@ export function ImageCard({
           </p>
         </div>
       )}
-      <VoteButtons captionId={captionId} initialVote={currentVote} voteColumn={voteColumn} />
+      {captionId != null && (
+        <VoteButtons captionId={captionId} initialVote={currentVote} voteColumn={voteColumn} />
+      )}
     </article>
   );
 }
