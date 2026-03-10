@@ -226,7 +226,7 @@ export function ImageUploader({ accessToken }: { accessToken: string | null }) {
           <h2 className="text-lg font-semibold mb-3">Generated Captions</h2>
           <ul className="space-y-2">
             {captions.map((c, i) => {
-              const text = c.content ?? c.caption_text ?? c.text ?? JSON.stringify(c);
+              const text = String(c.content ?? c.caption_text ?? c.text ?? JSON.stringify(c));
               return (
                 <li
                   key={c.id ?? i}
