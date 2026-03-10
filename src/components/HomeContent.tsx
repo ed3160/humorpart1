@@ -15,12 +15,19 @@ export function HomeContent() {
   const [votesArray, setVotesArray] = useState<{ caption_id: string; vote: 1 | -1 }[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [userProfile, setUserProfile] = useState<{ name: string; avatar: string } | null>(null);
 
   useEffect(() => {
     async function load() {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+
+      const meta = user.user_metadata ?? {};
+      setUserProfile({
+        name: meta.full_name ?? meta.name ?? user.email ?? "",
+        avatar: meta.avatar_url ?? meta.picture ?? "",
+      });
 
       const { data: images, error: imgErr } = await supabase
         .from("images")
@@ -111,6 +118,8 @@ export function HomeContent() {
         votesArray={votesArray}
         voteColumn={VOTE_COLUMN}
         imageIdToCaptionId={imageIdToCaptionId}
+        captionTexts={captionTexts}
+        userProfile={userProfile}
       >
         {rows.length === 0 ? (
           <p className="text-lg text-neutral-600 dark:text-neutral-400">No images yet.</p>

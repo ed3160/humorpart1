@@ -9,11 +9,13 @@ export function StudyView({
   voteByCaptionId,
   voteColumn,
   imageIdToCaptionId,
+  captionTexts,
 }: {
   rows: ImageRow[];
   voteByCaptionId: Map<string, 1 | -1>;
   voteColumn: string;
   imageIdToCaptionId: Record<string, string>;
+  captionTexts: Record<string, string>;
 }) {
   const [index, setIndex] = useState(0);
   const current = rows[index];
@@ -47,6 +49,7 @@ export function StudyView({
           <ImageCard
             row={current}
             captionId={captionId}
+            captionText={captionTexts[current.id] ?? null}
             currentVote={currentVote}
             voteColumn={voteColumn}
             sizes="(max-width: 768px) 100vw, 28rem"

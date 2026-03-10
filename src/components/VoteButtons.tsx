@@ -25,12 +25,22 @@ export function VoteButtons({
   useEffect(() => () => { if (feedbackTimer.current) clearTimeout(feedbackTimer.current); }, []);
 
   async function submitVote(newVote: 1 | -1) {
-    if (vote === newVote) return; // already voted this way
     setLoading(true);
     setVoteError(null);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setVoteError("Sign in to vote"); return; }
+
+      // Clicking the same vote again = undo
+      if (vote === newVote) {
+        const { error } = await supabase
+          .from("caption_votes")
+          .delete()
+          .eq("profile_id", user.id)
+          .eq("caption_id", captionId);
+        if (!error) setVote(null);
+        return;
+      }
 
       const { error } = await supabase.from("caption_votes").upsert({
         profile_id: user.id,

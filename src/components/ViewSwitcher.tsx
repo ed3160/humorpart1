@@ -13,12 +13,16 @@ export function ViewSwitcher({
   votesArray,
   voteColumn,
   imageIdToCaptionId,
+  captionTexts,
+  userProfile,
   children,
 }: {
   rows: ImageRow[];
   votesArray: { caption_id: string; vote: number }[];
   voteColumn: string;
   imageIdToCaptionId: Record<string, string>;
+  captionTexts: Record<string, string>;
+  userProfile: { name: string; avatar: string } | null;
   children: React.ReactNode;
 }) {
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
@@ -64,13 +68,22 @@ export function ViewSwitcher({
             href="/generate"
             className="rounded-lg px-3 py-1.5 text-xs font-medium bg-foreground text-background hover:opacity-90 transition-opacity"
           >
-            Generate
+            Upload
           </Link>
           <ThemeToggle />
+          {userProfile && (
+            <img
+              src={userProfile.avatar}
+              alt={userProfile.name}
+              title={userProfile.name}
+              className="w-7 h-7 rounded-full object-cover"
+              referrerPolicy="no-referrer"
+            />
+          )}
         </div>
       </header>
 
-      {viewMode === "grid" ? children : <StudyView rows={rows} voteByCaptionId={voteByCaptionId} voteColumn={voteColumn} imageIdToCaptionId={imageIdToCaptionId} />}
+      {viewMode === "grid" ? children : <StudyView rows={rows} voteByCaptionId={voteByCaptionId} voteColumn={voteColumn} imageIdToCaptionId={imageIdToCaptionId} captionTexts={captionTexts} />}
     </>
   );
 }
