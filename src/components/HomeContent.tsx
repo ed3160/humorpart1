@@ -11,6 +11,7 @@ const VOTE_COLUMN = "vote_value";
 export function HomeContent() {
   const [rows, setRows] = useState<ImageRow[]>([]);
   const [imageIdToCaptionId, setImageIdToCaptionId] = useState<Record<string, string>>({});
+  const [captionTexts, setCaptionTexts] = useState<Record<string, string>>({});
   const [votesArray, setVotesArray] = useState<{ caption_id: string; vote: 1 | -1 }[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +26,7 @@ export function HomeContent() {
         .from("images")
         .select("id, created_datetime_utc, modified_datetime_utc, url, is_common_use, profile_id, additional_context, is_public, image_description, celebrity_recognition")
         .order("created_datetime_utc", { ascending: false })
-        .limit(10000);
+        .limit(250);
 
       if (imgErr) {
         setError(imgErr.message);
@@ -33,22 +34,10 @@ export function HomeContent() {
         return;
       }
 
-      const imgRows = (images ?? []) as ImageRow[];
-      setRows(imgRows);
-      setLoading(false);
+      const allRows = (images ?? []) as ImageRow[];
+      const imageIds = allRows.map((r) => r.id);
 
-      // Fetch all captions
-      const captionMap: Record<string, string> = {};
-      const { data: captionsRows } = await supabase
-        .from("captions")
-        .select("id, image_id")
-        .limit(10000);
-      (captionsRows ?? []).forEach((c: { id: string; image_id: string }) => {
-        captionMap[c.image_id] = c.id;
-      });
-      setImageIdToCaptionId(captionMap);
-
-      // Fetch all votes for this user (no caption_id filter)
+      // Fetch votes first so we know which caption IDs the user voted on
       const { data: votes } = await supabase
         .from("caption_votes")
         .select(`caption_id, ${VOTE_COLUMN}`)
@@ -61,7 +50,35 @@ export function HomeContent() {
           return { caption_id: v.caption_id as string, vote: num === 1 ? 1 : num === -1 ? -1 : 0 };
         })
         .filter((v): v is { caption_id: string; vote: 1 | -1 } => v.vote !== 0);
+      const votedCaptionIds = new Set(parsed.map((v) => v.caption_id));
+
+      // Fetch captions in chunks of 100 image IDs
+      const captionMap: Record<string, string> = {};
+      const textMap: Record<string, string> = {};
+      for (let i = 0; i < imageIds.length; i += 100) {
+        const batch = imageIds.slice(i, i + 100);
+        const { data: caps } = await supabase
+          .from("captions")
+          .select("id, image_id, content")
+          .in("image_id", batch)
+          .not("content", "is", null)
+          .order("created_datetime_utc", { ascending: true })
+          .limit(1000);
+        (caps ?? []).forEach((c: { id: string; image_id: string; content: string }) => {
+          // Prefer the caption the user already voted on
+          if (!captionMap[c.image_id] || votedCaptionIds.has(c.id)) {
+            captionMap[c.image_id] = c.id;
+            textMap[c.image_id] = c.content;
+          }
+        });
+      }
+      // Only show images that have captions
+      const imgRows = allRows.filter((r) => captionMap[r.id]);
+      setRows(imgRows);
+      setImageIdToCaptionId(captionMap);
+      setCaptionTexts(textMap);
       setVotesArray(parsed);
+      setLoading(false);
 
     }
     load();
@@ -104,6 +121,7 @@ export function HomeContent() {
                   <ImageCard
                     row={row}
                     captionId={captionId}
+                    captionText={captionTexts[row.id] ?? null}
                     currentVote={currentVote === 1 ? 1 : currentVote === -1 ? -1 : null}
                     voteColumn={VOTE_COLUMN}
                   />

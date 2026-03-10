@@ -8,6 +8,7 @@ import { VoteButtons } from "@/components/VoteButtons";
 export function ImageCard({
   row,
   captionId,
+  captionText,
   currentVote,
   voteColumn,
   sizes = "(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw",
@@ -16,13 +17,15 @@ export function ImageCard({
   row: ImageRow;
   /** Id from captions table (caption_votes.caption_id FK). Null only if caption row missing and create failed. */
   captionId: string | null;
+  /** Caption text from the captions table. Falls back to image description. */
+  captionText?: string | null;
   currentVote: 1 | -1 | null;
   voteColumn: string;
   sizes?: string;
   priority?: boolean;
 }) {
   const caption = formatCaption(
-    row.additional_context ?? row.image_description ?? null
+    captionText ?? row.additional_context ?? row.image_description ?? null
   );
   const hasImage = row.url != null && row.url !== "";
 
