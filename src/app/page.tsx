@@ -10,12 +10,12 @@ export default async function Home() {
   if (!user) {
     return (
       <main className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-8">
-        <div className="flex items-center justify-end absolute top-4 right-4">
+        <div className="absolute top-4 right-4">
           <ThemeToggleWrapper />
         </div>
-        <h1 className="text-3xl font-bold tracking-tight mb-2">Humor Project</h1>
-        <p className="text-neutral-600 dark:text-neutral-400 mb-8">
-          Sign in to view images
+        <h1 className="text-4xl font-bold tracking-tight mb-1">Crackd</h1>
+        <p className="text-neutral-500 dark:text-neutral-400 mb-10 text-sm">
+          Rate funny captions. Generate your own.
         </p>
         <LoginButton />
       </main>

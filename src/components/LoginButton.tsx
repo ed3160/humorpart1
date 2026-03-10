@@ -18,7 +18,7 @@ export function LoginButton() {
     <button
       type="button"
       onClick={handleSignIn}
-      className="rounded-xl bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 px-6 py-3 font-medium shadow-lg hover:opacity-90 transition-opacity"
+      className="rounded-lg bg-foreground text-background px-6 py-2.5 text-sm font-medium hover:opacity-90 transition-opacity"
     >
       Sign in with Google
     </button>

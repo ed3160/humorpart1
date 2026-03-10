@@ -20,19 +20,14 @@ export default async function GeneratePage() {
 
   return (
     <main className="min-h-screen bg-background text-foreground p-6 md:p-8">
-      <header className="flex flex-wrap items-center justify-between gap-4 mb-6 md:mb-8">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Generate Captions</h1>
-          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-            Upload an image to generate AI captions
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
+      <header className="flex flex-wrap items-center justify-between gap-4 mb-8">
+        <h1 className="text-2xl font-semibold tracking-tight">Generate</h1>
+        <div className="flex items-center gap-2">
           <Link
             href="/"
-            className="rounded-lg px-3 py-1.5 text-sm font-medium bg-foreground/10 hover:bg-foreground/20 text-foreground transition-colors"
+            className="rounded-lg px-3 py-1.5 text-xs font-medium bg-foreground/[0.06] hover:bg-foreground/10 text-foreground transition-colors"
           >
-            &larr; Back
+            Back
           </Link>
           <ThemeToggleWrapper />
         </div>

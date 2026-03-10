@@ -87,7 +87,10 @@ export function HomeContent() {
   if (loading) {
     return (
       <main className="min-h-screen bg-background text-foreground flex items-center justify-center">
-        <p className="text-neutral-500 dark:text-neutral-400">Loading images...</p>
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-6 w-6 rounded-full border-2 border-foreground/20 border-t-foreground/60 animate-spin" />
+          <p className="text-sm text-neutral-400">Loading</p>
+        </div>
       </main>
     );
   }

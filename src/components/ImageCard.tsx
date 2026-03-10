@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import type { ImageRow } from "@/types/database";
-import { formatCaption } from "@/lib/caption";
 import { VoteButtons } from "@/components/VoteButtons";
 
 export function ImageCard({
@@ -15,22 +14,18 @@ export function ImageCard({
   priority = false,
 }: {
   row: ImageRow;
-  /** Id from captions table (caption_votes.caption_id FK). Null only if caption row missing and create failed. */
   captionId: string | null;
-  /** Caption text from the captions table. Falls back to image description. */
   captionText?: string | null;
   currentVote: 1 | -1 | null;
   voteColumn: string;
   sizes?: string;
   priority?: boolean;
 }) {
-  const caption = formatCaption(
-    captionText ?? row.additional_context ?? row.image_description ?? null
-  );
+  const caption = captionText ?? row.additional_context ?? row.image_description ?? null;
   const hasImage = row.url != null && row.url !== "";
 
   return (
-    <article className="group min-w-0 overflow-hidden rounded-2xl border border-neutral-200 dark:border-foreground/10 bg-white dark:bg-neutral-900 shadow-md hover:shadow-xl hover:scale-[1.02] transition-all duration-300 flex flex-col text-neutral-900 dark:text-neutral-100">
+    <article className="group min-w-0 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col">
       <div className="aspect-square relative bg-neutral-100 dark:bg-neutral-800 overflow-hidden flex-shrink-0">
         {hasImage ? (
           <Image
@@ -39,20 +34,18 @@ export function ImageCard({
             fill
             sizes={sizes}
             priority={priority}
-            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            className="object-cover"
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-neutral-400 text-sm">
+          <div className="absolute inset-0 flex items-center justify-center text-neutral-400 text-xs">
             No image
           </div>
         )}
       </div>
-      {caption != null && caption !== "" && (
-        <div className="p-3 min-w-0 flex-shrink-0">
-          <p className="text-sm text-neutral-800 dark:text-foreground/90 leading-tight break-words">
-            {caption}
-          </p>
-        </div>
+      {caption && (
+        <p className="px-3 pt-2.5 pb-1 text-xs leading-snug text-neutral-700 dark:text-neutral-300 line-clamp-3">
+          {caption}
+        </p>
       )}
       {captionId != null && (
         <VoteButtons captionId={captionId} initialVote={currentVote} voteColumn={voteColumn} />

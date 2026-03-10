@@ -3,8 +3,8 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
 export const metadata: Metadata = {
-  title: "Humor Project",
-  description: "Website for humor project",
+  title: "Crackd",
+  description: "Rate and generate funny captions",
 };
 
 export default function RootLayout({

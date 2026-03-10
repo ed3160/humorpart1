@@ -31,23 +31,18 @@ export function ViewSwitcher({
 
   return (
     <>
-      <header className="flex flex-wrap items-center justify-between gap-4 mb-6 md:mb-8">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Images</h1>
-          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-            Rate each caption with ↑ (upvote) or ↓ (downvote). Your vote is saved to the database; refresh to see it persist.
-          </p>
-        </div>
+      <header className="flex flex-wrap items-center justify-between gap-4 mb-8">
+        <h1 className="text-2xl font-semibold tracking-tight">Crackd</h1>
         <div className="flex items-center gap-2">
-          <div className="rounded-lg p-1 bg-foreground/10 flex">
+          <div className="rounded-lg p-0.5 bg-neutral-100 dark:bg-neutral-800 flex">
             <button
               type="button"
               onClick={() => setViewMode("grid")}
               aria-pressed={viewMode === "grid"}
-              className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+              className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
                 viewMode === "grid"
-                  ? "bg-white dark:bg-neutral-800 text-foreground shadow"
-                  : "text-foreground/70 hover:text-foreground"
+                  ? "bg-foreground text-background shadow-sm"
+                  : "text-neutral-500 dark:text-neutral-400 hover:text-foreground"
               }`}
             >
               Grid
@@ -56,10 +51,10 @@ export function ViewSwitcher({
               type="button"
               onClick={() => setViewMode("study")}
               aria-pressed={viewMode === "study"}
-              className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+              className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
                 viewMode === "study"
-                  ? "bg-white dark:bg-neutral-800 text-foreground shadow"
-                  : "text-foreground/70 hover:text-foreground"
+                  ? "bg-foreground text-background shadow-sm"
+                  : "text-neutral-500 dark:text-neutral-400 hover:text-foreground"
               }`}
             >
               Study
@@ -67,9 +62,9 @@ export function ViewSwitcher({
           </div>
           <Link
             href="/generate"
-            className="rounded-lg px-3 py-1.5 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+            className="rounded-lg px-3 py-1.5 text-xs font-medium bg-foreground text-background hover:opacity-90 transition-opacity"
           >
-            Generate Captions
+            Generate
           </Link>
           <ThemeToggle />
         </div>

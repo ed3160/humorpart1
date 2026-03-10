@@ -23,11 +23,11 @@ type Step = "idle" | "uploading" | "registering" | "generating" | "done" | "erro
 
 const STEP_LABELS: Record<Step, string> = {
   idle: "",
-  uploading: "Uploading image...",
-  registering: "Registering with pipeline...",
-  generating: "Generating captions (this may take a moment)...",
-  done: "Done!",
-  error: "Something went wrong.",
+  uploading: "Uploading...",
+  registering: "Processing...",
+  generating: "Generating captions...",
+  done: "Done",
+  error: "Failed",
 };
 
 export function ImageUploader({ accessToken }: { accessToken: string | null }) {
@@ -180,11 +180,11 @@ export function ImageUploader({ accessToken }: { accessToken: string | null }) {
             className="mx-auto max-h-64 rounded-lg object-contain"
           />
         ) : (
-          <div className="py-8">
-            <p className="text-lg font-medium text-foreground/80">
+          <div className="py-10">
+            <p className="text-sm font-medium text-foreground/60">
               Drop an image here or click to select
             </p>
-            <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
+            <p className="mt-1.5 text-xs text-neutral-400">
               JPEG, PNG, WebP, GIF, or HEIC
             </p>
           </div>
@@ -230,7 +230,7 @@ export function ImageUploader({ accessToken }: { accessToken: string | null }) {
               return (
                 <li
                   key={c.id ?? i}
-                  className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-4 text-sm leading-relaxed shadow-sm"
+                  className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 px-4 py-3 text-sm leading-relaxed text-neutral-900 dark:text-neutral-100"
                 >
                   {text}
                 </li>
