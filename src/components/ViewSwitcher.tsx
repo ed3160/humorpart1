@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
 import type { ImageRow } from "@/types/database";
 import { StudyView } from "./StudyView";
 import { ThemeToggle } from "./ThemeProvider";
@@ -64,6 +65,12 @@ export function ViewSwitcher({
               Study
             </button>
           </div>
+          <Link
+            href="/generate"
+            className="rounded-lg px-3 py-1.5 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+          >
+            Generate Captions
+          </Link>
           <ThemeToggle />
         </div>
       </header>

@@ -1,0 +1,118 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import type { ImageRow } from "@/types/database";
+import { ImageCard } from "@/components/ImageCard";
+import { ViewSwitcher } from "@/components/ViewSwitcher";
+
+const VOTE_COLUMN = "vote_value";
+
+export function HomeContent() {
+  const [rows, setRows] = useState<ImageRow[]>([]);
+  const [imageIdToCaptionId, setImageIdToCaptionId] = useState<Record<string, string>>({});
+  const [votesArray, setVotesArray] = useState<{ caption_id: string; vote: 1 | -1 }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function load() {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: images, error: imgErr } = await supabase
+        .from("images")
+        .select("id, created_datetime_utc, modified_datetime_utc, url, is_common_use, profile_id, additional_context, is_public, image_description, celebrity_recognition")
+        .order("created_datetime_utc", { ascending: false })
+        .limit(10000);
+
+      if (imgErr) {
+        setError(imgErr.message);
+        setLoading(false);
+        return;
+      }
+
+      const imgRows = (images ?? []) as ImageRow[];
+      setRows(imgRows);
+      setLoading(false);
+
+      // Fetch all captions
+      const captionMap: Record<string, string> = {};
+      const { data: captionsRows } = await supabase
+        .from("captions")
+        .select("id, image_id")
+        .limit(10000);
+      (captionsRows ?? []).forEach((c: { id: string; image_id: string }) => {
+        captionMap[c.image_id] = c.id;
+      });
+      setImageIdToCaptionId(captionMap);
+
+      // Fetch all votes for this user (no caption_id filter)
+      const { data: votes } = await supabase
+        .from("caption_votes")
+        .select(`caption_id, ${VOTE_COLUMN}`)
+        .eq("profile_id", user.id)
+        .limit(10000);
+
+      const parsed = (votes ?? [])
+        .map((v: Record<string, unknown>) => {
+          const num = Number(v[VOTE_COLUMN]);
+          return { caption_id: v.caption_id as string, vote: num === 1 ? 1 : num === -1 ? -1 : 0 };
+        })
+        .filter((v): v is { caption_id: string; vote: 1 | -1 } => v.vote !== 0);
+      setVotesArray(parsed);
+
+    }
+    load();
+  }, []);
+
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-background text-foreground flex items-center justify-center">
+        <p className="text-neutral-500 dark:text-neutral-400">Loading images...</p>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-background text-foreground">
+        <h1 className="text-2xl font-bold text-red-600">Error loading images</h1>
+        <p className="mt-2 text-neutral-600 dark:text-neutral-400">{error}</p>
+      </main>
+    );
+  }
+
+  return (
+    <main className="min-h-screen bg-background text-foreground p-6 md:p-8">
+      <ViewSwitcher
+        rows={rows}
+        votesArray={votesArray}
+        voteColumn={VOTE_COLUMN}
+        imageIdToCaptionId={imageIdToCaptionId}
+      >
+        {rows.length === 0 ? (
+          <p className="text-lg text-neutral-600 dark:text-neutral-400">No images yet.</p>
+        ) : (
+          <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6 list-none p-0 m-0">
+            {rows.map((row) => {
+              const captionId = imageIdToCaptionId[row.id] ?? null;
+              const currentVote = captionId ? (votesArray.find((x) => x.caption_id === captionId)?.vote ?? null) : null;
+              return (
+                <li key={row.id}>
+                  <ImageCard
+                    row={row}
+                    captionId={captionId}
+                    currentVote={currentVote === 1 ? 1 : currentVote === -1 ? -1 : null}
+                    voteColumn={VOTE_COLUMN}
+                  />
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </ViewSwitcher>
+    </main>
+  );
+}
