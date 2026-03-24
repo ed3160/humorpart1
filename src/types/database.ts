@@ -3,8 +3,10 @@
  */
 export type ImageRow = {
   id: string;
+  created_by_user_id: string;
+  modified_by_user_id: string;
   created_datetime_utc: string;
-  modified_datetime_utc: string | null;
+  modified_datetime_utc: string;
   url: string | null;
   is_common_use: boolean | null;
   profile_id: string | null;
@@ -22,4 +24,8 @@ export type CaptionVoteRow = {
   profile_id: string;
   caption_id: string;
   value: number; // 1 or -1
+  created_by_user_id: string;
+  modified_by_user_id: string;
+  created_datetime_utc: string;
+  modified_datetime_utc: string;
 };

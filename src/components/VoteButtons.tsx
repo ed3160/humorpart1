@@ -46,8 +46,8 @@ export function VoteButtons({
         profile_id: user.id,
         caption_id: captionId,
         [voteColumn]: newVote,
-        created_datetime_utc: new Date().toISOString(),
-        modified_datetime_utc: new Date().toISOString(),
+        created_by_user_id: user.id,
+        modified_by_user_id: user.id,
       }, { onConflict: "profile_id,caption_id" });
 
       if (error) { setVoteError(error.message); return; }
