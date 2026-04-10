@@ -14,8 +14,11 @@ export default async function Home() {
           <ThemeToggleWrapper />
         </div>
         <h1 className="text-4xl font-bold tracking-tight mb-1">Crackd</h1>
-        <p className="text-neutral-500 dark:text-neutral-400 mb-10 text-sm">
-          Rate funny captions. Generate your own.
+        <p className="text-neutral-500 dark:text-neutral-400 mb-3 text-sm text-center max-w-sm">
+          See images with AI-generated captions and vote on how funny they are. You can also upload your own images and generate captions.
+        </p>
+        <p className="text-neutral-400 dark:text-neutral-500 mb-8 text-xs text-center max-w-xs">
+          Sign in with any Google account to start rating.
         </p>
         <LoginButton />
       </main>

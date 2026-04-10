@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { ImageRow } from "@/types/database";
 import { StudyView } from "./StudyView";
 import { ThemeToggle } from "./ThemeProvider";
+import { createClient } from "@/lib/supabase/client";
 
 type ViewMode = "grid" | "study";
 
@@ -25,7 +26,7 @@ export function ViewSwitcher({
   userProfile: { name: string; avatar: string } | null;
   children: React.ReactNode;
 }) {
-  const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [viewMode, setViewMode] = useState<ViewMode>("study");
 
   const voteByCaptionId = useMemo(() => {
     const m = new Map<string, 1 | -1>();
@@ -41,27 +42,29 @@ export function ViewSwitcher({
           <div className="rounded-lg p-0.5 bg-neutral-100 dark:bg-neutral-800 flex">
             <button
               type="button"
-              onClick={() => setViewMode("grid")}
-              aria-pressed={viewMode === "grid"}
-              className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-                viewMode === "grid"
-                  ? "bg-foreground text-background shadow-sm"
-                  : "text-neutral-500 dark:text-neutral-400 hover:text-foreground"
-              }`}
-            >
-              Grid
-            </button>
-            <button
-              type="button"
               onClick={() => setViewMode("study")}
               aria-pressed={viewMode === "study"}
+              title="View one image at a time"
               className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
                 viewMode === "study"
                   ? "bg-foreground text-background shadow-sm"
                   : "text-neutral-500 dark:text-neutral-400 hover:text-foreground"
               }`}
             >
-              Study
+              Focus
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("grid")}
+              aria-pressed={viewMode === "grid"}
+              title="Browse all images at once"
+              className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                viewMode === "grid"
+                  ? "bg-foreground text-background shadow-sm"
+                  : "text-neutral-500 dark:text-neutral-400 hover:text-foreground"
+              }`}
+            >
+              Gallery
             </button>
           </div>
           <Link
@@ -72,13 +75,23 @@ export function ViewSwitcher({
           </Link>
           <ThemeToggle />
           {userProfile && (
-            <img
-              src={userProfile.avatar}
-              alt={userProfile.name}
-              title={userProfile.name}
-              className="w-7 h-7 rounded-full object-cover"
-              referrerPolicy="no-referrer"
-            />
+            <button
+              type="button"
+              onClick={async () => {
+                const supabase = createClient();
+                await supabase.auth.signOut();
+                window.location.href = "/";
+              }}
+              title="Sign out"
+              className="rounded-full hover:ring-2 hover:ring-neutral-400 transition-all"
+            >
+              <img
+                src={userProfile.avatar}
+                alt={userProfile.name}
+                className="w-7 h-7 rounded-full object-cover"
+                referrerPolicy="no-referrer"
+              />
+            </button>
           )}
         </div>
       </header>

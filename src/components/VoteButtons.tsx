@@ -62,6 +62,7 @@ export function VoteButtons({
 
   return (
     <div className="flex items-center gap-1.5 px-3 pb-2.5 pt-1">
+      <span className="text-[10px] text-neutral-400 dark:text-neutral-500 mr-0.5">Funny?</span>
       <button
         type="button"
         onClick={() => submitVote(1)}
