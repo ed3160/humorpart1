@@ -75,23 +75,26 @@ export function ViewSwitcher({
           </Link>
           <ThemeToggle />
           {userProfile && (
-            <button
-              type="button"
-              onClick={async () => {
-                const supabase = createClient();
-                await supabase.auth.signOut();
-                window.location.href = "/";
-              }}
-              title="Sign out"
-              className="rounded-full hover:ring-2 hover:ring-neutral-400 transition-all"
-            >
+            <>
               <img
                 src={userProfile.avatar}
                 alt={userProfile.name}
+                title={userProfile.name}
                 className="w-7 h-7 rounded-full object-cover"
                 referrerPolicy="no-referrer"
               />
-            </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  const supabase = createClient();
+                  await supabase.auth.signOut();
+                  window.location.href = "/";
+                }}
+                className="rounded-md px-2.5 py-1.5 text-[10px] font-medium text-neutral-500 dark:text-neutral-400 hover:text-foreground hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+              >
+                Sign out
+              </button>
+            </>
           )}
         </div>
       </header>
