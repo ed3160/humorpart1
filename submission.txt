@@ -1,0 +1,197 @@
+Vercel:
+- Caption Ranking App: https://humorpart1-h63uuwcqd-eshas-projects-a98d311b.vercel.app/
+- Admin Area: https://humorpart1-admin-oaddh7nbb-eshas-projects-a98d311b.vercel.app
+- Prompt Chain Tool: https://week-8-prompt-chain-tool-dh7itlpkf-eshas-projects-a98d311b.vercel.app
+
+Github (latest commit for Caption Ranking App): https://github.com/ed3160/humorpart1/commit/d63a521d642211f44e73f4e1b128be6471f5b293
+
+
+==================================================================
+TEST PLAN — Caption Ranking App (Crackd)
+==================================================================
+
+The app is structured as a tree of user pathways. Each leaf is a
+case I tested (manually in browser unless otherwise marked). Items
+marked [auto] were exercised against the local dev server with
+curl, three runs, all green.
+
+ROOT
+├── 1. Unauthenticated visitor on "/"
+│    ├── 1a. Page renders with title "Crackd" [auto, 3x]
+│    ├── 1b. Description copy is visible (the long tagline added
+│    │       after user study — "See images with AI-generated
+│    │       captions...")
+│    ├── 1c. Sub-note "Sign in with any Google account..." visible
+│    ├── 1d. "Sign in with Google" button is rendered and clickable
+│    ├── 1e. Theme toggle in top-right cycles light → dark → system
+│    │       and persists across reload (localStorage key
+│    │       humor-theme)
+│    └── 1f. Direct visit to "/generate" while signed out
+│            redirects to "/" [auto, 3x — 1 redirect, HTTP 200]
+│
+├── 2. Sign-in flow
+│    ├── 2a. Click "Sign in with Google" → Google OAuth screen
+│    ├── 2b. Approve consent → returns to /auth/callback?code=...
+│    ├── 2c. /auth/callback exchanges code for session and 302s
+│    │       back to "/"
+│    ├── 2d. /auth/callback with no code still redirects to "/"
+│    │       (graceful) [auto, 3x]
+│    └── 2e. After sign-in, "/" renders the authenticated
+│            HomeContent instead of the marketing page
+│
+├── 3. Authenticated home (Focus is the default view)
+│    ├── 3a. Loading spinner shows while fetching images, votes,
+│    │       and captions
+│    ├── 3b. Header renders "Crackd", view switcher, Upload link,
+│    │       theme toggle, profile avatar, Sign out button
+│    ├── 3c. Profile avatar uses Google avatar_url (referrerPolicy
+│    │       no-referrer so Google doesn't block the image)
+│    ├── 3d. Avatar tooltip shows the user's full name
+│    ├── 3e. Sign out button → supabase.auth.signOut() → reload to
+│    │       "/" → unauthenticated landing page returns
+│    └── 3f. Empty-state branch (no images): renders "No images
+│            yet." instead of crashing
+│
+├── 4. Focus view (default)
+│    ├── 4a. Single image card centered, max width capped
+│    ├── 4b. Caption text renders under the image (this was the
+│    │       caption-text-in-study fix from earlier)
+│    ├── 4c. Counter "n / total" updates as you navigate
+│    ├── 4d. "Previous" / "Next" buttons advance the index
+│    ├── 4e. Wrap-around: Next on the last image goes to first;
+│    │       Previous on the first image goes to last
+│    ├── 4f. Arrow keys ← → navigate (keyboard listener on window)
+│    ├── 4g. Next image is preloaded via a hidden <img> with
+│    │       fetchPriority="high" so transitions don't flash
+│    └── 4h. Vote buttons render under the caption (see branch 6)
+│
+├── 5. Gallery view (toggled from Focus)
+│    ├── 5a. Click "Gallery" pill → grid of cards renders
+│    ├── 5b. Responsive columns: 2 / 3 / 4 / 5 / 6 across breakpoints
+│    ├── 5c. Each card shows image, caption (line-clamp-3), and
+│    │       vote buttons
+│    ├── 5d. Cards without a caption are filtered out at load time
+│    │       (HomeContent only includes images that have a caption)
+│    └── 5e. Click "Focus" pill → returns to Focus view at index 0
+│
+├── 6. Voting (caption_votes table)
+│    ├── 6a. Click ↑ on an unvoted caption → upsert with vote_value
+│    │       = 1; "Saved" feedback appears for ~1.5s; arrow turns
+│    │       green
+│    ├── 6b. Click ↓ on an unvoted caption → upsert with vote_value
+│    │       = -1; arrow turns red
+│    ├── 6c. Click ↑ then ↓ → upsert flips vote_value to -1
+│    │       (onConflict: profile_id,caption_id)
+│    ├── 6d. Click the same arrow again on a voted caption → DELETE
+│    │       row; arrow returns to neutral grey (vote-undo flow)
+│    ├── 6e. Refresh page → previously-voted arrow stays
+│    │       highlighted (votes are re-fetched in HomeContent)
+│    ├── 6f. Voting writes audit fields created_by_user_id and
+│    │       modified_by_user_id (set to user.id)
+│    ├── 6g. Vote while signed-out (e.g. session expires mid-page)
+│    │       → "Sign in to vote" inline error; no row written
+│    ├── 6h. Supabase error response → red inline error message
+│    │       under the buttons
+│    └── 6i. "Funny?" label is visible to the left of the arrows
+│            (the user-study clarification)
+│
+├── 7. Upload + caption generation ("/generate")
+│    ├── 7a. Header shows "Generate", Back link to "/", theme toggle
+│    ├── 7b. Drop zone renders the dashed-border placeholder with
+│    │       allowed format hint
+│    ├── 7c. Click drop zone → native file picker opens
+│    ├── 7d. Drag-and-drop → border highlights blue, drop accepts
+│    │       file
+│    ├── 7e. Reject unsupported MIME (e.g. .pdf) → "Unsupported
+│    │       file type" error, no upload attempted
+│    ├── 7f. Accepted MIMEs (jpeg, jpg, png, webp, gif, heic) →
+│    │       proceeds
+│    ├── 7g. Pipeline step 1: POST /pipeline/generate-presigned-url
+│    │       — spinner shows "Uploading..."
+│    ├── 7h. Pipeline step 2: PUT to S3-style presigned URL
+│    ├── 7i. Pipeline step 3: POST /pipeline/upload-image-from-url
+│    │       — spinner shows "Processing..."
+│    ├── 7j. Pipeline step 4: POST /pipeline/generate-captions —
+│    │       spinner shows "Generating captions..."
+│    ├── 7k. Success → green check, "Done", caption list renders
+│    ├── 7l. Failure at any step → red X, "Failed", error body
+│    │       shown in red banner
+│    ├── 7m. "Upload another image" button resets state (file
+│    │       input cleared, captions cleared, preview cleared)
+│    └── 7n. Direct visit while signed-out redirects to "/"
+│            [auto, 3x]
+│
+├── 8. Theme + chrome
+│    ├── 8a. Theme toggle button cycles through ☀️ → 🌙 → 💻 icons
+│    ├── 8b. Choosing "system" follows OS prefers-color-scheme and
+│    │       updates live when the OS setting changes
+│    └── 8c. Theme persists across reload and across pages
+│            (Home → Generate → Home keeps the same mode)
+│
+└── 9. Boundary / negative cases
+     ├── 9a. Unknown route returns 404 [auto, 3x]
+     ├── 9b. Slow Supabase fetch keeps the loading spinner up;
+     │       error path renders a red "Error loading images" page
+     │       with the underlying message
+     ├── 9c. Image with no caption is filtered out (no broken
+     │       cards)
+     ├── 9d. Image row with empty url renders the "No image"
+     │       placeholder instead of breaking next/image
+     └── 9e. Production build succeeds: `npm run build` →
+             "Compiled successfully", 7/7 static pages generated,
+             no type errors
+
+
+==================================================================
+POST-TESTING WRITE-UP — Caption Ranking App
+==================================================================
+
+- Ran the full workflow three times against the local dev server
+  (sign-in → Focus → vote → flip vote → undo vote → Gallery →
+  Upload → caption generation → sign out) plus three automated
+  curl smoke runs covering the unauthenticated routes, the
+  /generate redirect, the /auth/callback redirect, and the 404.
+  All paths returned the expected status and content; no errors
+  surfaced in the dev log across the three runs.
+
+- Verified the user-study fixes from the previous commit are
+  still working as intended: Focus is the default view on
+  sign-in, the "Funny?" label appears next to the vote arrows on
+  every card (Focus and Gallery), the longer landing-page copy
+  renders, and the Sign out button next to the avatar logs the
+  user out and returns them to the marketing page.
+
+- Tested vote persistence end-to-end: upvote a caption → see
+  "Saved" → refresh the page → arrow is still green. Then
+  downvote the same caption → upsert flips vote_value to -1 (no
+  duplicate row, thanks to onConflict: profile_id,caption_id).
+  Then click the same arrow again → row is deleted and the
+  caption returns to a neutral state.
+
+- Tested the upload pipeline against api.almostcrackd.ai with a
+  PNG and a HEIC file. Both walked the four-step pipeline
+  (presigned URL → S3 PUT → register image → generate captions)
+  and rendered the generated captions list. Tried uploading a PDF
+  to confirm the MIME guard rejects it before any network call.
+
+- Confirmed the production build is clean: `npm run build`
+  compiled successfully, generated 7/7 static pages, and produced
+  no TypeScript errors. There is one cosmetic ESLint resolver
+  warning about eslint-config-next/core-web-vitals; it does not
+  block the build and Vercel's deployment is unaffected.
+
+- Bug found: the avatar <img> previously failed to load in
+  some browsers because Google blocks hotlinks without a referrer
+  policy. Confirmed the existing referrerPolicy="no-referrer" on
+  the <img> tag in ViewSwitcher resolves it — avatar renders
+  consistently in Chrome, Safari and Firefox.
+
+- Bug found: when a Supabase session expired in the background,
+  clicking a vote arrow used to fail silently. Verified the
+  current code surfaces an inline "Sign in to vote" message in
+  this case, and that the row is not written on the server side.
+
+- No regressions found in the three runs. The app is demo-ready
+  on the URL above; the latest deployed commit
+  (d63a521d642211f44e73f4e1b128be6471f5b293) matches the code
+  that was tested.
